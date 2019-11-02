@@ -14,13 +14,14 @@
 %% limitations under the License.
 %%--------------------------------------------------------------------
 
--module(emqttd_kafka_bridge).
+-module(emqx_kafka).
 
 -include_lib("emqttd/include/emqttd.hrl").
 
 -include_lib("emqttd/include/emqttd_protocol.hrl").
 
 -include_lib("emqttd/include/emqttd_internal.hrl").
+
 -import(string,[concat/2]).
 -import(lists,[nth/2]). 
 

@@ -14,20 +14,21 @@
 %% limitations under the License.
 %%--------------------------------------------------------------------
 
--module(emq_auth_emqttd_kafka_bridge).
-
--behaviour(emqttd_auth_mod).
+-module(emqx_acl_kafka).
 
 -include_lib("emqttd/include/emqttd.hrl").
 
--export([init/1, check/3, description/0]).
+%% ACL callbacks
+-export([check_acl/2, description/0, init/1,
+	 reload_acl/1]).
 
 init(Opts) -> {ok, Opts}.
 
-check(#mqtt_client{client_id = ClientId, username = Username}, Password, _Opts) ->
-    io:format("Auth Demo: clientId=~p, username=~p, password=~p~n",
-              [ClientId, Username, Password]),
+check_acl({Client, PubSub, Topic}, _Opts) ->
+    io:format("ACL Demo: ~p ~p ~p~n",
+	      [Client, PubSub, Topic]),
     ignore.
 
-description() -> "Auth Demo Module".
+reload_acl(_Opts) -> ignore.
 
+description() -> "ACL Demo Module".

@@ -13,23 +13,25 @@
 %% See the License for the specific language governing permissions and
 %% limitations under the License.
 %%--------------------------------------------------------------------
+-module(emqx_kafka_app).
 
--module(emq_acl_emqttd_kafka_bridge).
+-behaviour(application).
 
--include_lib("emqttd/include/emqttd.hrl").
+-emqx_plugin(?MODULE).
 
-%% ACL callbacks
--export([init/1, check_acl/2, reload_acl/1, description/0]).
+%% Application callbacks
+-export([start/2, stop/1]).
 
-init(Opts) ->
-    {ok, Opts}.
+start(_StartType, _StartArgs) ->
+    {ok, Sup} = emqx_kafka_sup:start_link(),
+    ok = emqttd_access_control:register_mod(auth, emqx_auth_kafka, []),
+    ok = emqttd_access_control:register_mod(acl, emqx_acl_kafka, []),
+    %% emqx_kafka:load(application:get_all_env()),
+    emqx_plugin_template:load(application:get_all_env()),
+    {ok, Sup}.
 
-check_acl({Client, PubSub, Topic}, _Opts) ->
-    io:format("ACL Demo: ~p ~p ~p~n", [Client, PubSub, Topic]),
-    ignore.
-
-reload_acl(_Opts) ->
-    ignore.
-
-description() -> "ACL Demo Module".
- 
+stop(_State) ->
+    ok = emqttd_access_control:unregister_mod(auth, emqx_auth_kafka),
+    ok = emqttd_access_control:unregister_mod(acl, emqx_acl_kafka),
+    %% emqttd_kafka_bridge:unload().
+    emqx_plugin_template:unload().

@@ -14,21 +14,22 @@
 %% limitations under the License.
 %%--------------------------------------------------------------------
 
--module(emqttd_kafka_bridge_app).
+-module(emqx_auth_kafka).
 
--behaviour(application).
+-behaviour(emqttd_auth_mod).
 
-%% Application callbacks
--export([start/2, stop/1]).
+-include_lib("emqttd/include/emqttd.hrl").
 
-start(_StartType, _StartArgs) ->
-    {ok, Sup} = emqttd_kafka_bridge_sup:start_link(),
-    ok = emqttd_access_control:register_mod(auth, emq_auth_emqttd_kafka_bridge, []),
-    ok = emqttd_access_control:register_mod(acl, emq_acl_emqttd_kafka_bridge, []),
-    emqttd_kafka_bridge:load(application:get_all_env()),
-    {ok, Sup}.
+-export([check/3, description/0, init/1]).
 
-stop(_State) ->
-    ok = emqttd_access_control:unregister_mod(auth, emq_auth_emqttd_kafka_bridge),
-    ok = emqttd_access_control:unregister_mod(acl, emq_acl_emqttd_kafka_bridge),
-    emqttd_kafka_bridge:unload().
+init(Opts) -> {ok, Opts}.
+
+check(#mqtt_client{client_id = ClientId,
+		   username = Username},
+      Password, _Opts) ->
+    io:format("Auth Demo: clientId=~p, username=~p, "
+	      "password=~p~n",
+	      [ClientId, Username, Password]),
+    ignore.
+
+description() -> "Auth Demo Module".
