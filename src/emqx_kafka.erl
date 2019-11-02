@@ -43,8 +43,8 @@
 %% Called when the plugin application start
 load(Env) ->
 	ekaf_init([Env]),
-    emqx:hook('client.authenticate', fun ?MODULE:on_client_authenticate/2, [Env]),
-    emqx:hook('client.check_acl', fun ?MODULE:on_client_check_acl/5, [Env]),
+    %% emqx:hook('client.authenticate', fun ?MODULE:on_client_authenticate/2, [Env]),
+    %% emqx:hook('client.check_acl', fun ?MODULE:on_client_check_acl/5, [Env]),
     emqx:hook('client.connected', fun ?MODULE:on_client_connected/4, [Env]),
     emqx:hook('client.disconnected', fun ?MODULE:on_client_disconnected/3, [Env]),
     emqx:hook('client.subscribe', fun ?MODULE:on_client_subscribe/4, [Env]),
@@ -58,14 +58,14 @@ load(Env) ->
     emqx:hook('message.delivered', fun ?MODULE:on_message_delivered/4, [Env]),
     emqx:hook('message.acked', fun ?MODULE:on_message_acked/4, [Env]).
 
-on_client_authenticate(ClientInfo = #{clientid := ClientId, password := Password}, _Env) ->
-    io:format("Client(~s) authenticate, Password:~p ~n", [ClientId, Password]),
-    {stop, ClientInfo#{auth_result => success}}.
-
-on_client_check_acl(#{clientid := ClientId}, PubSub, Topic, DefaultACLResult, _Env) ->
-    io:format("Client(~s) authenticate, PubSub:~p, Topic:~p, DefaultACLResult:~p~n",
-                [ClientId, PubSub, Topic, DefaultACLResult]),
-    {stop, allow}.
+%% on_client_authenticate(ClientInfo = #{clientid := ClientId, password := Password}, _Env) ->
+%%     io:format("Client(~s) authenticate, Password:~p ~n", [ClientId, Password]),
+%%     {stop, ClientInfo#{auth_result => success}}.
+%% 
+%% on_client_check_acl(#{clientid := ClientId}, PubSub, Topic, DefaultACLResult, _Env) ->
+%%     io:format("Client(~s) authenticate, PubSub:~p, Topic:~p, DefaultACLResult:~p~n",
+%%                 [ClientId, PubSub, Topic, DefaultACLResult]),
+%%     {stop, allow}.
 
 on_client_connected(#{clientid := ClientId}, ConnAck, ConnAttrs, _Env) ->
     io:format("Client(~s) connected, connack: ~w, conn_attrs:~p~n", [ClientId, ConnAck, ConnAttrs]).
