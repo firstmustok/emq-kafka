@@ -1,20 +1,34 @@
-PROJECT = emqttd_kafka_bridge
-PROJECT_DESCRIPTION = EMQTTD Kafka Bridge
-PROJECT_VERSION = 2.0.7
+## shallow clone for speed
 
-DEPS = ekaf
-dep_ekaf = git https://github.com/helpshift/ekaf master
+REBAR_GIT_CLONE_OPTIONS += --depth 1
+export REBAR_GIT_CLONE_OPTIONS
 
+REBAR = rebar3
+all: compile
 
-BUILD_DEPS = emqttd cuttlefish
-dep_emqttd = git https://github.com/emqtt/emqttd master
-dep_cuttlefish = git https://github.com/emqtt/cuttlefish
+compile:
+	$(REBAR) compile
 
-COVER = true
+clean: distclean
 
-include erlang.mk
+ct: compile
+	$(REBAR) as test ct -v
 
-app:: rebar.config
+eunit: compile
+	$(REBAR) as test eunit
 
-app.config::
-	./deps/cuttlefish/cuttlefish -l info -e etc/ -c etc/emqttd_kafka_bridge.conf -i priv/emqttd_kafka_bridge.schema -d data
+xref:
+	$(REBAR) xref
+
+distclean:
+	@rm -rf _build
+	@rm -f data/app.*.config data/vm.*.args rebar.lock
+
+CUTTLEFISH_SCRIPT = _build/default/lib/cuttlefish/cuttlefish
+
+$(CUTTLEFISH_SCRIPT):
+	@${REBAR} get-deps
+	@if [ ! -f cuttlefish ]; then make -C _build/default/lib/cuttlefish; fi
+
+app.config: $(CUTTLEFISH_SCRIPT) etc/emqx_auth_http.conf
+	$(verbose) $(CUTTLEFISH_SCRIPT) -l info -e etc/ -c etc/emqx_auth_http.conf -i priv/emqx_auth_http.schema -d data
