@@ -153,7 +153,7 @@ brod_init(_Env) ->
     %% emqx_pool:async_submit(fun emqx_broker:publish/1, [Msg])
 
     ok = brod:start_client(BootstrapBroker, brodClient, ClientConfig),
-    ok = brod:start_producer(brodClient, ProduceTopic, _ProducerConfig = []),
+    ok = brod:start_producer([brodClient], ProduceTopic, _ProducerConfig = []),
 
     io:format("Init ekaf with ~p~n", [BootstrapBroker]).
 
