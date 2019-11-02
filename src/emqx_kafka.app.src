@@ -1,0 +1,14 @@
+{application, emqx_kafka,
+ [{description, "EMQ X Kafka Plugin"},
+  {vsn, "git"},
+  {modules, []},
+  {registered, [emqx_kafka_sup]},
+  {applications, [kernel,stdlib]},
+  {mod, {emqx_kafka_app,[]}},
+  {env, []},
+  {licenses, ["Apache-2.0"]},
+  {maintainers, ["EMQ X Team <contact@emqx.io>"]},
+  {links, [{"Homepage", "https://github.com/firstmustok/emq-kafka"},
+           {"Github", "https://github.com/firstmustok/emq-kafka"}
+          ]}
+ ]}.
