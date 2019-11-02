@@ -1,0 +1,15 @@
+{mapping, "coap.port", "emqx_coap.port", [
+  {datatype, integer}
+]}.
+
+{mapping, "coap.enable_stats", "emqx_coap.enable_stats", [
+  {datatype, flag}
+]}.
+
+{mapping, "coap.dtls.port", "emqx_coap.dtls_opts", [
+  {datatype, integer}
+]}.
+
+{mapping, "coap.dtls.keyfile", "emqx_coap.dtls_opts", [
+  {datatype, string}
+]}.

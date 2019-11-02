@@ -110,7 +110,7 @@ on_message_publish(Message = #message{qos     = Qos,
     Str2 = <<"\", \"message\":[">>,
     Str3 = <<"]}">>,
     Str4 = <<Str1/binary, Topic/binary, Str2/binary, Payload/binary, Str3/binary>>,
-	{ok, KafkaTopic} = application:get_env(emqx_kafka_bridge, values),
+	{ok, KafkaTopic} = application:get_env(emqx_kafka, values),
     ProduceTopic = proplists:get_value(kafka_producer_topic, KafkaTopic),
     ekaf:produce_async(ProduceTopic, Str4),	
     {ok, Message}.
