@@ -42,7 +42,9 @@
 
 %% Called when the plugin application start
 load(Env) ->
-	ekaf_init([Env]),
+    ekaf_init([Env]),
+    brod_init([Env]),
+
     %% emqx:hook('client.authenticate', fun ?MODULE:on_client_authenticate/2, [Env]),
     %% emqx:hook('client.check_acl', fun ?MODULE:on_client_check_acl/5, [Env]),
     emqx:hook('client.connected', fun ?MODULE:on_client_connected/4, [Env]),
@@ -67,7 +69,7 @@ load(Env) ->
 %%                 [ClientId, PubSub, Topic, DefaultACLResult]),
 %%     {stop, allow}.
 
-on_client_connected(#{clientid := ClientId}, ConnAck, ConnAttrs, _Env) ->
+on_client_connected(#{clientid := ClientId, peerhost := ClientIp}, ConnAck, ConnAttrs, _Env) ->
     io:format("Client(~s) connected, connack: ~w, conn_attrs:~p~n", [ClientId, ConnAck, ConnAttrs]).
 
 on_client_disconnected(#{clientid := ClientId}, ReasonCode, _Env) ->
@@ -100,7 +102,7 @@ on_session_terminated(#{clientid := ClientId}, ReasonCode, _Env) ->
 on_message_publish(Message = #message{topic = <<"$SYS/", _/binary>>}, _Env) ->
     {ok, Message};
 
-on_message_publish(Message = #message{qos     = Qos,
+on_message_publish(Message = #message{qos = Qos,
                         %% retain  = Retain,
                         topic   = Topic,
                         payload = Payload
@@ -131,6 +133,29 @@ ekaf_init(_Env) ->
     application:set_env(ekaf, ekaf_bootstrap_broker, BootstrapBroker),
     {ok, _} = application:ensure_all_started(ekaf),
     io:format("Initialized ekaf with ~p~n", [{"localhost", 9092}]).
+
+%% ===================================================================
+%% brod_init https://github.com/klarna/brod
+%% ===================================================================
+brod_init(_Env) ->
+    {ok, _} = application:ensure_all_started(brod),
+    
+    {ok, Values} = application:get_env(emqx_kafka, values),
+    BootstrapBroker = proplists:get_value(bootstrap_broker, Values),
+    %% PartitionStrategy= proplists:get_value(partition_strategy, Values),
+    
+    ClientConfig = [],
+    {ok, KafkaTopic} = application:get_env(emqx_kafka, values),
+    ProduceTopic = proplists:get_value(kafka_producer_topic, KafkaTopic),
+
+    %%TODO listen message from kafka 
+    %% https://github.com/emqx/emqx-delayed-publish
+    %% emqx_pool:async_submit(fun emqx_broker:publish/1, [Msg])
+
+    ok = brod:start_client(BootstrapBroker, brodClient, ClientConfig),
+    ok = brod:start_producer(brodClient, ProduceTopic, _ProducerConfig = []),
+
+    io:format("Init ekaf with ~p~n", [BootstrapBroker]).
 
 %% Called when the plugin application stop
 unload() ->
