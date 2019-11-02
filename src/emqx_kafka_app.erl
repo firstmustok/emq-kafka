@@ -24,14 +24,8 @@
 
 start(_StartType, _StartArgs) ->
     {ok, Sup} = emqx_kafka_sup:start_link(),
-    ok = emqttd_access_control:register_mod(auth, emqx_auth_kafka, []),
-    ok = emqttd_access_control:register_mod(acl, emqx_acl_kafka, []),
-    %% emqx_kafka:load(application:get_all_env()),
     emqx_plugin_template:load(application:get_all_env()),
     {ok, Sup}.
 
 stop(_State) ->
-    ok = emqttd_access_control:unregister_mod(auth, emqx_auth_kafka),
-    ok = emqttd_access_control:unregister_mod(acl, emqx_acl_kafka),
-    %% emqttd_kafka_bridge:unload().
     emqx_plugin_template:unload().
