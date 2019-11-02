@@ -16,20 +16,20 @@
 
 -module(emqx_auth_kafka).
 
--behaviour(emqttd_auth_mod).
+-include_lib("emqx/include/emqx.hrl").
 
--include_lib("emqttd/include/emqttd.hrl").
+%% ACL callbacks
+-export([ init/1
+        , check/2
+        , description/0
+        ]).
 
--export([check/3, description/0, init/1]).
 
-init(Opts) -> {ok, Opts}.
+init(Opts) -> 
+  {ok, Opts}.
 
-check(#mqtt_client{client_id = ClientId,
-		   username = Username},
-      Password, _Opts) ->
-    io:format("Auth Demo: clientId=~p, username=~p, "
-	      "password=~p~n",
-	      [ClientId, Username, Password]),
-    ignore.
+check(_Credentials = #{client_id := ClientId, username := Username, password := Password}, _State) ->
+    io:format("Auth Demo: clientId=~p, username=~p, password=~p~n", [ClientId, Username, Password]),
+    ok.
 
-description() -> "Auth Demo Module".
+description() -> "Auth kafka Module".

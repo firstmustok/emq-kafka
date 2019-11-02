@@ -16,19 +16,23 @@
 
 -module(emqx_acl_kafka).
 
--include_lib("emqttd/include/emqttd.hrl").
+-include_lib("emqx/include/emqx.hrl").
 
 %% ACL callbacks
--export([check_acl/2, description/0, init/1,
-	 reload_acl/1]).
+-export([ init/1
+        , check_acl/2
+        , reload_acl/1
+        , description/0
+        ]).
+
 
 init(Opts) -> {ok, Opts}.
 
-check_acl({Client, PubSub, Topic}, _Opts) ->
-    io:format("ACL Demo: ~p ~p ~p~n",
-	      [Client, PubSub, Topic]),
-    ignore.
+check_acl({Credentials, PubSub, _NoMatchAction, Topic}, _State) ->
+    io:format("ACL Demo: ~p ~p ~p~n", [Credentials, PubSub, Topic]),
+    allow.
 
-reload_acl(_Opts) -> ignore.
+reload_acl(_State) ->
+    ok.
 
 description() -> "ACL Demo Module".

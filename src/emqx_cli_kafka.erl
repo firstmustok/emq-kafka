@@ -14,15 +14,13 @@
 %% limitations under the License.
 %%--------------------------------------------------------------------
 
--module(emq_cli_emqttd_kafka_bridge).
-
--include_lib("emqttd/include/emqttd_cli.hrl").
+-module(emqx_cli_kafka).
 
 -export([cmd/1]).
 
 cmd(["arg1", "arg2"]) ->
-    ?PRINT_MSG("ok");
+    emqx_ctl:print("ok");
 
 cmd(_) ->
-    ?USAGE([{"cmd arg1 arg2",  "cmd demo"}]).
+    emqx_ctl:usage([{"cmd arg1 arg2",  "cmd demo"}]).
 
