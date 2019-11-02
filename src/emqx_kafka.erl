@@ -24,9 +24,9 @@
 -export([load/1, unload/0]).
 
 %% Hooks functions
--export([ on_client_authenticate/2
-        , on_client_check_acl/5
-        , on_client_connected/4
+-export([ %%on_client_authenticate/2
+        %%, on_client_check_acl/5
+        on_client_connected/4
         , on_client_disconnected/3
         , on_client_subscribe/4
         , on_client_unsubscribe/4
