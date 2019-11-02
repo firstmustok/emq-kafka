@@ -30,5 +30,5 @@ $(CUTTLEFISH_SCRIPT):
 	@${REBAR} get-deps
 	@if [ ! -f cuttlefish ]; then make -C _build/default/lib/cuttlefish; fi
 
-app.config: $(CUTTLEFISH_SCRIPT) etc/emqx_auth_http.conf
-	$(verbose) $(CUTTLEFISH_SCRIPT) -l info -e etc/ -c etc/emqx_auth_http.conf -i priv/emqx_auth_http.schema -d data
+app.config: $(CUTTLEFISH_SCRIPT) etc/emqx_kafka.conf
+	$(verbose) $(CUTTLEFISH_SCRIPT) -l info -e etc/ -c etc/emqx_kafka.conf -d data
