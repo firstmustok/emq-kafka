@@ -144,7 +144,7 @@ brod_init(_Env) ->
     BootstrapBroker = proplists:get_value(bootstrap_broker, Values),
     %% PartitionStrategy= proplists:get_value(partition_strategy, Values),
     
-    ClientConfig = [],
+    ClientConfig = [{query_api_versions, false}],
     {ok, KafkaTopic} = application:get_env(emqx_kafka, values),
     ProduceTopic = proplists:get_value(kafka_producer_topic, KafkaTopic),
 
