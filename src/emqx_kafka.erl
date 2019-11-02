@@ -124,7 +124,7 @@ on_message_acked(#{clientid := ClientId}, Message, _Env) ->
     {ok, Message}.
 
 ekaf_init(_Env) ->
-    {ok, Values} = application:get_env(emqx_kafka_bridge, values),
+    {ok, Values} = application:get_env(emqx_kafka, values),
     BootstrapBroker = proplists:get_value(bootstrap_broker, Values),
     PartitionStrategy= proplists:get_value(partition_strategy, Values),
     application:set_env(ekaf, ekaf_partition_strategy, PartitionStrategy),
