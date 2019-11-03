@@ -12,3 +12,4 @@ rel/example_project
 emqttd_plugin_template.d
 _build/
 _checkout/
+.rebar3/
