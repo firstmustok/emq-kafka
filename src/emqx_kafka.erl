@@ -155,7 +155,13 @@ brod_init(_Env) ->
     ok = brod:start_client(BootstrapBroker, brodClient, ClientConfig),
     ok = brod:start_producer([brodClient], ProduceTopic, _ProducerConfig = []),
 
-    io:format("Init ekaf with ~p~n", [BootstrapBroker]).
+    io:format("Init brod with ~p~n", BootstrapBroker).
+
+client_config() ->
+    case os:getenv("KAFKA_VERSION") of
+        "0.9" ++ _ -> [{query_api_versions, false}];
+        _ -> []
+    end.
 
 %% Called when the plugin application stop
 unload() ->
