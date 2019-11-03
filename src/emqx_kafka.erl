@@ -18,6 +18,8 @@
 
 -include_lib("emqx/include/emqx.hrl").
 
+-include_lib("brod/include/brod_int.hrl").
+
 -import(string,[concat/2]).
 -import(lists,[nth/2]). 
 
@@ -143,17 +145,24 @@ brod_init(_Env) ->
     {ok, Values} = application:get_env(emqx_kafka, values),
     BootstrapBroker = proplists:get_value(bootstrap_broker, Values),
     %% PartitionStrategy= proplists:get_value(partition_strategy, Values),
-    
-    ClientConfig = [{query_api_versions, false}],
-    {ok, KafkaTopic} = application:get_env(emqx_kafka, values),
-    ProduceTopic = proplists:get_value(kafka_producer_topic, KafkaTopic),
+
 
     %%TODO listen message from kafka 
     %% https://github.com/emqx/emqx-delayed-publish
     %% emqx_pool:async_submit(fun emqx_broker:publish/1, [Msg])
 
+    ClientConfig = [
+      {query_api_versions, false}
+    , {auto_start_producers, true}
+    , { reconnect_cool_down_seconds, 10}],
     ok = brod:start_client(BootstrapBroker, brodClient, ClientConfig),
-    ok = brod:start_producer([brodClient], ProduceTopic, _ProducerConfig = []),
+
+    ProduceTopic = proplists:get_value(kafka_producer_topic, Values),
+    io:format("topic: ~s~n", [ProduceTopic]),
+
+    ok = brod:start_producer(brodClient, ProduceTopic, _ProducerConfig = []),
+
+    ok = brod:produce_sync(brodClient, ProduceTopic, 0, <<"key2">>, <<"value2">>),
 
     io:format("Init brod with ~p~n", BootstrapBroker).
 
