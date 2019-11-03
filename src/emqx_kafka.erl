@@ -154,6 +154,7 @@ on_message_publish(Message = #message{qos = Qos,
 						}, _Env) ->
     io:format("publish ~s~n", [emqx_message:format(Message)]),
     % {ok, Message}.
+    %TODO emqx_json:encode
     Json = jsone:encode([
 			      {topic, Topic},
 			      {client_id, ClientId},
@@ -190,23 +191,47 @@ brod_init(_Env) ->
     BootstrapBroker = proplists:get_value(bootstrap_broker, Values),
     %% PartitionStrategy= proplists:get_value(partition_strategy, Values),
 
-    %%TODO listen message from kafka 
-    %% https://github.com/emqx/emqx-delayed-publish
-    %% emqx_pool:async_submit(fun emqx_broker:publish/1, [Msg])
-
+    
     ClientConfig = [
       {query_api_versions, false}
     , {auto_start_producers, true}
     , { reconnect_cool_down_seconds, 10}],
     ok = brod:start_client(BootstrapBroker, brodClient, ClientConfig),
 
+    %% init consumer
+    brod_consumer(_Env),
+
+    %% init the producer
     ProduceTopic = proplists:get_value(kafka_producer_topic, Values),
     io:format("topic: ~s~n", [ProduceTopic]),
 
     ok = brod:start_producer(brodClient, ProduceTopic, _ProducerConfig = []),
-    ok = brod:produce_sync(brodClient, ProduceTopic, 0, <<"key2">>, <<"value2">>),
-
+    % ok = brod:produce_sync(brodClient, ProduceTopic, 0, <<"key2">>, <<"value2">>),
     io:format("Init brod with ~p~n", BootstrapBroker).
+
+brod_consumer(_Env) ->
+    {ok, Values} = application:get_env(emqx_kafka, values),
+    ConsumerTopic = proplists:get_value(kafka_consumer_topic, Values),
+
+    SubscriberCallbackFun = fun(Partition, Msg, ShellPid = CallbackState) -> 
+        io:format("consumer: ~p~n", [Msg]),
+
+        %%TODO listen message from kafka 
+        %% https://github.com/emqx/emqx-delayed-publish
+        %% emqx_pool:async_submit(fun emqx_broker:publish/1, [Msg])
+
+        % emqx_pool:async_submit(fun emqx_broker:publish/1, emqx_message:make(<<"/topic">>, <<"hello">>)),
+        % emqx_broker:safe_publish(emqx_message:make(<<"/topic">>, <<"hello">>)),
+
+        ShellPid ! Msg, {ok, ack, CallbackState} 
+    end,
+    brod_topic_subscriber:start_link(brodClient, ConsumerTopic, Partitions=[0],
+                                 _ConsumerConfig=[{begin_offset, earliest}],
+                                 _CommittdOffsets=[], message, SubscriberCallbackFun,
+                                 _CallbackState=self()),
+
+    io:format("topic: ~s~n", [ConsumerTopic]).
+
 
 %% Called when the plugin application stop
 unload() ->
