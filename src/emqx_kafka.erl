@@ -168,6 +168,7 @@ on_message_publish(Message = #message{qos = Qos,
     ProduceTopic = proplists:get_value(kafka_producer_topic, Values),
     
     io:format("json ~s: ~s~n", [ProduceTopic, Json]),
+    % mykey_3 is partition key
     ok = brod:produce_sync(brodClient, ProduceTopic, 0, <<"mykey_3">>, Json),
     % ok = brod:produce_sync(brodClient, <<"kafka">>, 0, <<"mykey_3">>, <<"value">>),
  
@@ -190,7 +191,6 @@ brod_init(_Env) ->
     {ok, Values} = application:get_env(emqx_kafka, values),
     BootstrapBroker = proplists:get_value(bootstrap_broker, Values),
     %% PartitionStrategy= proplists:get_value(partition_strategy, Values),
-
     
     ClientConfig = [
       {query_api_versions, false}
@@ -213,19 +213,29 @@ brod_consumer(_Env) ->
     {ok, Values} = application:get_env(emqx_kafka, values),
     ConsumerTopic = proplists:get_value(kafka_consumer_topic, Values),
 
-    SubscriberCallbackFun = fun(Partition, Msg, ShellPid = CallbackState) -> 
+    SubscriberCallbackFun = fun(Partition, 
+                                Msg = #kafka_message{
+                                    value = Payload
+                                }, 
+                                ShellPid = CallbackState) -> 
         io:format("consumer: ~p~n", [Msg]),
 
         %%TODO listen message from kafka 
         %% https://github.com/emqx/emqx-delayed-publish
+        JsonObject = emqx_json:decode(Payload),
+        
+        Topic = proplists:get_value(<<"topic">>, JsonObject),
+        Data = proplists:get_value(<<"payload">>, JsonObject),
+
         %% emqx_pool:async_submit(fun emqx_broker:publish/1, [Msg])
 
         % emqx_pool:async_submit(fun emqx_broker:publish/1, emqx_message:make(<<"/topic">>, <<"hello">>)),
-        % emqx_broker:safe_publish(emqx_message:make(<<"/topic">>, <<"hello">>)),
+        emqx_broker:safe_publish(emqx_message:make(Topic, Data)),
 
         ShellPid ! Msg, {ok, ack, CallbackState} 
     end,
-    brod_topic_subscriber:start_link(brodClient, ConsumerTopic, Partitions=[0],
+
+    brod_topic_subscriber:start_link(brodClient, ConsumerTopic, all,
                                  _ConsumerConfig=[{begin_offset, earliest}],
                                  _CommittdOffsets=[], message, SubscriberCallbackFun,
                                  _CallbackState=self()),
@@ -239,6 +249,7 @@ unload() ->
     % emqx:unhook('client.check_acl', fun ?MODULE:on_client_check_acl/5),
     emqx:unhook('client.connected', fun ?MODULE:on_client_connected/4),
     emqx:unhook('client.disconnected', fun ?MODULE:on_client_disconnected/3),
+    emqx:unhook('message.publish', fun ?MODULE:on_message_publish/2),
     % emqx:unhook('client.subscribe', fun ?MODULE:on_client_subscribe/4),
     % emqx:unhook('client.unsubscribe', fun ?MODULE:on_client_unsubscribe/4),
     % emqx:unhook('session.created', fun ?MODULE:on_session_created/3),
@@ -246,7 +257,8 @@ unload() ->
     % emqx:unhook('session.subscribed', fun ?MODULE:on_session_subscribed/4),
     % emqx:unhook('session.unsubscribed', fun ?MODULE:on_session_unsubscribed/4),
     % emqx:unhook('session.terminated', fun ?MODULE:on_session_terminated/3),
-    emqx:unhook('message.publish', fun ?MODULE:on_message_publish/2).
     % emqx:unhook('message.delivered', fun ?MODULE:on_message_delivered/4),
     % emqx:unhook('message.acked', fun ?MODULE:on_message_acked/4).
+    brod:stop_client(brodClient).
+    
 
